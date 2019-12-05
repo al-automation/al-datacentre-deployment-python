@@ -23,9 +23,9 @@ Let's say we have 2 networks that we need to add to this deployment:
 
 The network inside the properties file will look like this: 
 
-networks = [
-["Network 1","172.168.10.0/24","192.168.32.0/24","10.10.10.0/24"],
-["Network 2","192.168.0.0/16"]
+networks = [  
+["Network 1","172.168.10.0/24","192.168.32.0/24","10.10.10.0/24"],  
+["Network 2","192.168.0.0/16"]  
 ]
 
 #### These objects are required for external assets to be scanned externally by Alert Logic's Datacentre, post deployment. 
