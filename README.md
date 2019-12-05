@@ -1,5 +1,5 @@
 # Datacenter Alert Logic Deployment using Python
-This is a python script that will allow you to create a Datacenter d1eployment in the Alert Logic Console.
+This is a python script that will allow you to create a Datacenter deployment in the Alert Logic Console.
 
 ## Usage
 #### These properties are required to ensure that the script can create the deployment successfully. 
