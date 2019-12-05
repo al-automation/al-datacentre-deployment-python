@@ -34,16 +34,17 @@ alert_logic_deployment_name = ""
 # Please note that these networks need to have a particular format: 
 #     - All networks need to be added as a list, inside the existing networks = [] list
 #     - The first value in each list must be the Network Name
-#     - The CIDR ranges for that network must follow on from the network name in the list format
+#     - The CIDR ranges for that network must follow on from the network name
 #     - The lists must be in a python list format (values surrounded by quotes, comma separated)
 # Example (Network Name - Arbitary name for added network):
 #     networks = [
 #     ["Network Name 1", "192.168.16.0/24", "192.168.128.0/24", "172.24.0.0/16"],.
 #     ["Network Name 2", "10.10.0.0/16"],
-#     [ <More Networks if needed> ].
+#     [ <More Networks if needed> ]
 #     ]
 
 networks = [
+[] 
 ]
 
 # The protection level you would like to set on each of the protected regions/VPC's above. 
