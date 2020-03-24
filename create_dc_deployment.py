@@ -309,11 +309,9 @@ def create_networks ():
 			create_network_payload=create_network_payload.replace('"]',']')
 			#Change the objects inside the cidr list to be surrounded by double quotes instead of single
 			create_network_payload=create_network_payload.replace("'",'"')
-			print(create_network_payload)
 			#Create networks and store the network keys into a new list, network_keys (so that we can add to scope later)
 			create_network_url = f'{base_url}/assets_manager/v1/{alert_logic_cid}/deployments/{deployment_id}/networks'
 			create_network_response = requests.post(create_network_url, create_network_payload, headers=headers)
-			print(create_network_url)
 
 			if create_network_response.status_code !=200: 
 				print('    Error: Network with name '+network_name+ ' creation failed. Got the following response: '+ str(create_network_response.status_code))
@@ -322,7 +320,6 @@ def create_networks ():
 				protected_networks.append("\t\t\t\tNetwork: "+network_name+"\tCIDR's: "+str(cidr_list)[1:-1].replace("'", "")+"\n")
 			
 			create_network_info = json.loads(create_network_response.text)
-			print(create_network_info)
 			global network_key
 			global claim_key
 			network_key=create_network_info['key']
@@ -344,7 +341,6 @@ def create_networks ():
 
 			#Subnet creation for each network
 			for each_cidr in cidr_list:
-				print(each_cidr)
 				list_subnets = [] 
 				
 				#Subnet creation payload
