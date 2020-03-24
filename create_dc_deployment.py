@@ -12,7 +12,7 @@ from datetime import datetime
 
 #Read in configuration file
 from create_dc_deployment_properties import *
-#from create_dc_deployment_properties_test import *
+#from test_create_dc_deployment_properties import *
 
 #Setting true/false variables to avoid conflict later
 true=True
@@ -352,7 +352,6 @@ def create_networks ():
 
 				#Convert the payload into json
 				create_subnet_payload=json.dumps(subnet_payload)
-				print(create_subnet_payload)
 				#Inside the scope, replace the [" "] so it's just [ ] 
 				create_subnet_payload=create_subnet_payload.replace('["','[')
 				create_subnet_payload=create_subnet_payload.replace('"]',']')
@@ -361,7 +360,6 @@ def create_networks ():
 				
 				#Create networks and store the network keys into a new list, network_keys (so that we can add to scope later)
 				create_subnet_url = f'{base_url}/assets_manager/v1/{alert_logic_cid}/deployments/{deployment_id}/networks/{network_id}/subnets'
-				print(create_subnet_url)
 				create_subnet_response = requests.post(create_subnet_url, create_subnet_payload, headers=headers)
 				
 				if create_subnet_response.status_code !=200: 
@@ -377,9 +375,7 @@ def create_networks ():
 	#Print created networks and the associated claim key
 	list_networks=''.join(list_networks)
 	print("The networks just created, and their associated unique registration keys: ")
-	print(str(list_networks))
-	print("The subnets just created, and their associated unique registration keys: ")
-	print(str(list_subnets))	
+	print(str(list_networks))	
 	#For logging purposes
 	protected_networks=''.join(protected_networks)
 
