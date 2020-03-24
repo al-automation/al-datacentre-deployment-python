@@ -30,26 +30,23 @@ alert_logic_cid = ""
 alert_logic_deployment_name = ""
 
 # Protected Networks
-# Here you can specify what networks you would like added to the Alert Logic Console. 
+# In a .csv file, you can specify what networks you would like added to the Alert Logic Console.
+# In the root folder of this script, you will see an example called networks.csv to use.
 # Please note that these networks need to have a particular format: 
-#     - All networks need to be added as a list, inside the existing networks = [] list
+#     - All networks need to be comma separated values
 #     - The first value in each list must be the Network Name
 #     - The CIDR ranges for that network must follow on from the network name
-#     - The lists must be in a python list format (values surrounded by quotes, comma separated)
+#
 # Example (Network Name - Arbitary name for added network):
-#     networks = [
-#     ["Network Name 1", "192.168.16.0/24", "192.168.128.0/24", "172.24.0.0/16"],.
-#     ["Network Name 2", "10.10.0.0/16"],
-#     [ <More Networks if needed> ]
-#     ]
-
-networks = [
-[] 
-]
+#     test-network,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
+#     test-network-2,10.10.20.0/24,10.10.21.0/24
+#     test-network-3,10.10.30.0/24
+#      <More Networks if needed> 
+network_csv_file = "networks.csv"
 
 # The protection level you would like to set on each of the protected regions/VPC's above. 
 # Must be either "Essentials" or "Professional"
-entitlement = ""
+entitlement = "Professional"
 
 # External Assets
 # Here you can add external assets which will be scanned from Alert Logic's Datacenter. 
@@ -57,7 +54,6 @@ entitlement = ""
 # Examples: 
 #     external_dns_names=["www.example.com","www.google.com"]
 #     external_ip_addresses=["8.8.8.8", "8.8.4.4"]
-
 external_dns_names=[]
 external_ip_addresses=[]
 

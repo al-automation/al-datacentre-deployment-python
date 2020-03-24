@@ -1,7 +1,10 @@
 #!/usr/bin/python3 -u
 
+#Wriiten for python 3.7.3
+
 #Required Libraries
 import json
+import csv
 import os
 import requests
 import time
@@ -65,10 +68,9 @@ elif entitlement not in ['Professional','Essentials']:
 	print('\nThe protection level has been set incorrectly in the configuration file. Please specify either "Essentials" or "Professional".\n')
 	exit()
 
-
 #Function to get AIMS Token once we have creds
 def get_token_userpass ():
-	url = '{}aims/v1/authenticate'.format(global_url)
+	url = f'{global_url}aims/v1/authenticate'
 	global auth_token
 	#Use credentials
 	aims_user = alert_logic_username
@@ -94,7 +96,7 @@ def get_token_userpass ():
 
 #Same as previous, but uses stored API Keys if they are detected
 def get_token_apikey ():
-	url = '{}aims/v1/authenticate'.format(global_url)
+	url = f'{global_url}aims/v1/authenticate'
 	global auth_token
 	print('Detected stored API Keys. Validating...', end = '')
 	#POST request to the URL using keys. Load the response into auth_info then parse out the token
@@ -111,8 +113,8 @@ def get_token_apikey ():
 
 #Function to validate the AIMS token was successfully generated, and that it has not expired
 def validate_token ():
-	url = '{}aims/v1/token_info'.format(global_url)
-	headers = {'x-aims-auth-token': '{}'.format(auth_token)}
+	url = f'{global_url}aims/v1/token_info'
+	headers = {'x-aims-auth-token': f'{auth_token}'}
 	global validate_info
 	validate_response = requests.get(url, headers=headers)
 	validate_info = json.loads(validate_response.text)
@@ -142,10 +144,10 @@ else:
 	exit()
 #Authentication complete
 
-headers = {"x-aims-auth-token": "{}".format(auth_token)} #Set header for all future API calls
+headers = {"x-aims-auth-token": f"{auth_token}"} #Set header for all future API calls
 
 #Get base endpoint for customer ID
-endpoint_url = '{0}endpoints/v1/{1}/residency/default/services/assets/endpoint/api'.format(global_url, alert_logic_cid)
+endpoint_url = f'{global_url}endpoints/v1/{alert_logic_cid}/residency/default/services/assets/endpoint/api'
 endpoint_response = requests.get(endpoint_url, headers=headers)
 
 #In case we don't get a 200 response getting the endpoint
@@ -179,7 +181,7 @@ print()
 #If the CID the user has authenticated from, is not equal to the target CID
 if alert_logic_cid != users_CID:
 	#This is checking whether there is a managed relationship (ensuring a parent-child relationship) between the 2 CID's.
-	managed_CID_check_url = '{0}aims/v1/{1}/accounts/managed/{2}'.format(global_url, users_CID, alert_logic_cid)
+	managed_CID_check_url = f'{global_url}aims/v1/{users_CID}/accounts/managed/{alert_logic_cid}'
 	managed_CID_check_response = requests.get(managed_CID_check_url, headers=headers)
 	managed_CID_check_statuscode = managed_CID_check_response.status_code
 
@@ -204,7 +206,7 @@ elif alert_logic_cid == users_CID:
 
 #Get some account information from the CID
 print('Target CID Info:\n')
-account_info_url = '{0}aims/v1/{1}/account'.format(global_url, alert_logic_cid)
+account_info_url = f'{global_url}aims/v1/{alert_logic_cid}/account'
 account_info_response = requests.get(account_info_url, headers=headers)
 account_info = json.loads(account_info_response.text)
 account_name = account_info['name']
@@ -217,7 +219,7 @@ print('    Base URL: ' + base_url)
 print()
 
 #Get the policy ID's for the protection levels.
-policies_info_url = '{0}/policies/v1/{1}/policies'.format(base_url, alert_logic_cid)
+policies_info_url = f'{base_url}/policies/v1/{alert_logic_cid}/policies'
 policies_info_response = requests.get(policies_info_url, headers=headers)
 policies_info = json.loads(policies_info_response.text)
 #The following code pulls in the entitlement set in the configuration file and returns the entitlement ID
@@ -250,7 +252,7 @@ def create_deployment ():
 	create_deployment_payload_final=create_deployment_payload.replace("\\", "")
 	create_deployment_payload_final=create_deployment_payload_final.replace('""', '')
 
-	create_deployment_url = '{0}/deployments/v1/{1}/deployments'.format(base_url, alert_logic_cid)
+	create_deployment_url = f'{base_url}/deployments/v1/{alert_logic_cid}/deployments'
 	create_deployment_response = requests.post(create_deployment_url, create_deployment_payload_final, headers=headers)
 	if create_deployment_response.status_code != 201:
 		print('    Error: Deployment creation failed. Got the following response: '+ str(create_deployment_response.status_code))
@@ -264,7 +266,6 @@ def create_deployment ():
 	global deployment_id
 	deployment_id=create_deployment_info['id']
 
-
 def create_networks ():
 	global network_keys
 	global protected_networks
@@ -273,21 +274,25 @@ def create_networks ():
 	protected_networks = []
 	list_networks = [] 
 
-	if not networks:
-		print("    No networks detected in the properties file. Skipping.")
+	if not network_csv_file:
+		print("    No networks detected in a csv file. Please provide the file path to the list of networks in a .csv on the properties file.\n")
 		protected_networks.append("\t\t\t\tNo networks defined")
 	else: 
-	
+		#Read from networks csv file
+		with open(network_csv_file, newline='') as csv_file:
+			reader = csv.reader(csv_file)
+			networks = list(reader)
+
 		for x in networks: 
-			# Pull out network name as the first value in list
+			#Pull out network name as the first value in list
 			network_name=x[0]
 			cidr_list = []
 			
-			# For every value other than the first, append to new list
+			#For every value other than the first, append to new list
 			for cidr in x[1:]: 
 				cidr_list.append(cidr)
 		
-			# Format the cidr list ready for the POST payload
+			#Format the cidr list ready for the POST payload
 			json_cidr_list=str(cidr_list)[1:-1]
 			
 			#Network creation payload
@@ -304,29 +309,81 @@ def create_networks ():
 			create_network_payload=create_network_payload.replace('"]',']')
 			#Change the objects inside the cidr list to be surrounded by double quotes instead of single
 			create_network_payload=create_network_payload.replace("'",'"')
-			
+			print(create_network_payload)
 			#Create networks and store the network keys into a new list, network_keys (so that we can add to scope later)
-			create_network_url = '{0}/assets_manager/v1/{1}/deployments/{2}/networks'.format(base_url, alert_logic_cid, deployment_id)
+			create_network_url = f'{base_url}/assets_manager/v1/{alert_logic_cid}/deployments/{deployment_id}/networks'
 			create_network_response = requests.post(create_network_url, create_network_payload, headers=headers)
-			
+			print(create_network_url)
+
 			if create_network_response.status_code !=200: 
 				print('    Error: Network with name '+network_name+ ' creation failed. Got the following response: '+ str(create_network_response.status_code))
 			else: 
 				print('    Network with name '+network_name+ ' created successfully, with CIDR ranges ' + json_cidr_list)
 				protected_networks.append("\t\t\t\tNetwork: "+network_name+"\tCIDR's: "+str(cidr_list)[1:-1].replace("'", "")+"\n")
+			
 			create_network_info = json.loads(create_network_response.text)
+			print(create_network_info)
 			global network_key
 			global claim_key
 			network_key=create_network_info['key']
 			network_keys.append(network_key)
 			claim_key=create_network_info['claim_key']
 			list_networks.append("    Network Name: " +network_name+"\t\tUnique Key: "+claim_key+"\n")
+			
+			#Find the network UUID for creating subnets later
+			global network_id
+			#Giving the network time create, was failing going straight into this
+			time.sleep(1)
+			#Query assets_query for full network info
+			network_id_url = f'{base_url}/assets_query/v1/{alert_logic_cid}/deployments/{deployment_id}/assets?asset_types=v:vpc&v.key={network_key}'
+			network_uuid_response = requests.get(network_id_url, headers=headers)
+			#Pull network_uuid value out
+			network_uuid_info = json.loads(network_uuid_response.text)
+			network_uuid_info=network_uuid_info['assets'][0]
+			network_id=network_uuid_info[0]['network_uuid']
+
+			#Subnet creation for each network
+			for each_cidr in cidr_list:
+				print(each_cidr)
+				list_subnets = [] 
+				
+				#Subnet creation payload
+				subnet_name = network_name+ ' (' +each_cidr+ ')'
+				subnet_payload = {
+						"subnet_name": subnet_name,
+						"cidr_block": (each_cidr)
+					}
+
+				#Convert the payload into json
+				create_subnet_payload=json.dumps(subnet_payload)
+				print(create_subnet_payload)
+				#Inside the scope, replace the [" "] so it's just [ ] 
+				create_subnet_payload=create_subnet_payload.replace('["','[')
+				create_subnet_payload=create_subnet_payload.replace('"]',']')
+				#Change the objects inside the cidr list to be surrounded by double quotes instead of single
+				create_subnet_payload=create_subnet_payload.replace("'",'"')
+				
+				#Create networks and store the network keys into a new list, network_keys (so that we can add to scope later)
+				create_subnet_url = f'{base_url}/assets_manager/v1/{alert_logic_cid}/deployments/{deployment_id}/networks/{network_id}/subnets'
+				print(create_subnet_url)
+				create_subnet_response = requests.post(create_subnet_url, create_subnet_payload, headers=headers)
+				
+				if create_subnet_response.status_code !=200: 
+					print('    Error: Subnet with name '+subnet_name+ ' creation failed. Got the following response: '+ str(create_subnet_response.status_code))
+				else: 
+					print('    Subnet with name '+subnet_name+ ' created successfully, with CIDR block ' + each_cidr)
+					#protected_subnets.append("\t\t\t\tNetwork: "+network_name+"\tCIDR's: "+str(cidr_list)[1:-1].replace("'", "")+"\n")
+
+				list_subnets.append("    Subnet Name: " +subnet_name+ "\n")
+			
 	print()
 	
 	#Print created networks and the associated claim key
 	list_networks=''.join(list_networks)
 	print("The networks just created, and their associated unique registration keys: ")
 	print(str(list_networks))
+	print("The subnets just created, and their associated unique registration keys: ")
+	print(str(list_subnets))	
 	#For logging purposes
 	protected_networks=''.join(protected_networks)
 
@@ -358,7 +415,7 @@ def set_scope_protection ():
 		update_scope_payload=json.dumps(update_scope_payload)
 		update_scope_payload=update_scope_payload.replace("\\", "")
 		update_scope_payload=update_scope_payload.replace('""', "")
-		update_scope_url = '{0}/deployments/v1/{1}/deployments/{2}'.format(base_url, alert_logic_cid, deployment_id)
+		update_scope_url = f'{base_url}/deployments/v1/{alert_logic_cid}/deployments/{deployment_id}'
 		update_scope_response = requests.put(update_scope_url, update_scope_payload, headers=headers)
 	
 		if update_scope_response.status_code !=200:
@@ -389,7 +446,7 @@ def create_external_assets ():
 			}
 
 			create_dns_payload=json.dumps(dns_payload)
-			create_dns_url = '{0}/assets_write/v1/{1}/deployments/{2}/assets'.format(base_url, alert_logic_cid, deployment_id)
+			create_dns_url = f'{base_url}/assets_write/v1/{alert_logic_cid}/deployments/{deployment_id}/assets'
 			create_dns_response = requests.put(create_dns_url, create_dns_payload, headers=headers)
 
 			if create_dns_response.status_code != 201:
@@ -418,7 +475,7 @@ def create_external_assets ():
 
 	
 			create_ip_payload=json.dumps(ip_payload)
-			create_ip_url = '{0}/assets_write/v1/{1}/deployments/{2}/assets'.format(base_url, alert_logic_cid, deployment_id)
+			create_ip_url = f'{base_url}/assets_write/v1/{alert_logic_cid}/deployments/{deployment_id}/assets'
 			create_ip_response = requests.put(create_ip_url, create_ip_payload, headers=headers)
 
 			if create_ip_response.status_code != 201:
@@ -447,7 +504,7 @@ print()
 
 #List all deployments
 print('Deployments for account '+alert_logic_cid+':\n')
-all_deployments_url = '{0}/deployments/v1/{1}/deployments'.format(base_url, alert_logic_cid)
+all_deployments_url = f'{base_url}/deployments/v1/{alert_logic_cid}/deployments'
 all_deployments_response = requests.get(all_deployments_url, headers=headers)
 if all_deployments_response.status_code != 200:
 	print('    Could not get existing deployments. Got response code: '+all_deployments_response.status_code)

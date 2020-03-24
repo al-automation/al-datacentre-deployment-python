@@ -25,15 +25,15 @@ Configuration:
 #### Example: 
 
 Let's say we have 2 networks that we need to add to this deployment: 
-- Network with name "Network 1" with 3 CIDR range:  172.168.10.0/24, 192.168.32.0/24 and 10.10.10.0/24
-- Network with name "Network 2" with 1 CIDR range:  192.168.0.0/16
+- Network with name "test-network-1" with 3 CIDR range:  10.10.10.0/24, 10.10.11.0/24, 10.10.12.0/24
+- Network with name "test-network-2" with 2 CIDR range:  10.10.20.0/24, 10.10.21.0/24
+- Network with name "test-network-3" with 1 CIDR range:  10.10.30.0/24
 
-The network inside the properties file will look like this: 
+The networks inside the network.csv file will look like this: 
 
-networks = [  
-["Network 1","172.168.10.0/24","192.168.32.0/24","10.10.10.0/24"],  
-["Network 2","192.168.0.0/16"]  
-]
+test-network,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
+test-network-2,10.10.20.0/24,10.10.21.0/24
+test-network-3,10.10.30.0/24
 
 #### These objects are required for external assets to be scanned externally by Alert Logic's Datacentre, post deployment. 
 - external_dns_names=["www.example.com","www.google.com"]

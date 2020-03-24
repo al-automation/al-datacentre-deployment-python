@@ -1,2 +1,3 @@
 __pycache__
-
+datacenter-*.log
+test_create_dc_deployment_properties.py
