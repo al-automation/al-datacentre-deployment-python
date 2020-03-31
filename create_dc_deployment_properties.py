@@ -38,15 +38,11 @@ alert_logic_deployment_name = ""
 #     - The CIDR ranges for that network must follow on from the network name
 #
 # Example (Network Name - Arbitary name for added network):
-#     test-network,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
-#     test-network-2,10.10.20.0/24,10.10.21.0/24
-#     test-network-3,10.10.30.0/24
+#     test-network,professional,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
+#     test-network-2,essentials,10.10.20.0/24,10.10.21.0/24
+#     test-network-3,professional,10.10.30.0/24
 #      <More Networks if needed> 
 network_csv_file = "networks.csv"
-
-# The protection level you would like to set on each of the protected regions/VPC's above. 
-# Must be either "Essentials" or "Professional"
-entitlement = "Professional"
 
 # External Assets
 # Here you can add external assets which will be scanned from Alert Logic's Datacenter. 

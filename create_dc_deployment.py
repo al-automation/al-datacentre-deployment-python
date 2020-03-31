@@ -177,7 +177,6 @@ print('    CID: ' + users_CID)
 #print('    Last authentication: ' + user_lastlogin_hr) #Don't think this is needed, last time user logged into the UI
 print()
 
-
 #If the CID the user has authenticated from, is not equal to the target CID
 if alert_logic_cid != users_CID:
 	#This is checking whether there is a managed relationship (ensuring a parent-child relationship) between the 2 CID's.
@@ -217,15 +216,6 @@ print('    Accound CID: ' + account_CID)
 print('    Default Location: ' + account_defaultloc)
 print('    Base URL: ' + base_url)
 print()
-
-#Get the policy ID's for the protection levels.
-policies_info_url = f'{base_url}/policies/v1/{alert_logic_cid}/policies'
-policies_info_response = requests.get(policies_info_url, headers=headers)
-policies_info = json.loads(policies_info_response.text)
-#The following code pulls in the entitlement set in the configuration file and returns the entitlement ID
-entitlement=entitlement.capitalize()
-policy_id = [x for x in policies_info if x['name'] == entitlement]
-entitlement_id=policy_id[0]['id']
 
 #Function to create the deployment, adding in all
 def create_deployment ():
@@ -270,9 +260,18 @@ def create_networks ():
 	global network_keys
 	global protected_networks
 	global list_networks
+	global networks_scope_dict
+	global network_keys_dict
+	network_keys_dict = {}
+	networks_scope_dict = {}
 	network_keys = []
 	protected_networks = []
-	list_networks = [] 
+	list_networks = []
+
+	#Get the policy ID's for the scope of protection levels.
+	policies_info_url = f'{base_url}/policies/v1/{alert_logic_cid}/policies'
+	policies_info_response = requests.get(policies_info_url, headers=headers)
+	policies_info = json.loads(policies_info_response.text)
 
 	if not network_csv_file:
 		print("    No networks detected in a csv file. Please provide the file path to the list of networks in a .csv on the properties file.\n")
@@ -284,16 +283,23 @@ def create_networks ():
 			networks = list(reader)
 
 		for x in networks: 
-			#Pull out network name as the first value in list
+			#Pull out network name and scope of protection as the first and second value in list
 			network_name=x[0]
-			cidr_list = []
+			network_scope=x[1]
+
+			#The following code identifies the entitlement ID for the scope of protection for the network
+			entitlement=network_scope.capitalize()
+			policy_id = [x for x in policies_info if x['name'] == entitlement]
+			entitlement_id=policy_id[0]['id']
+			networks_scope_dict[network_name] = [network_scope,entitlement_id]
 			
+			cidr_list = []
 			#For every value other than the first, append to new list
-			for cidr in x[1:]: 
+			for cidr in x[2:]: 
 				cidr_list.append(cidr)
 		
 			#Format the cidr list ready for the POST payload
-			json_cidr_list=str(cidr_list)[1:-1]
+			json_cidr_list=str(cidr_list)[2:-1]
 			
 			#Network creation payload
 			network_payload = {
@@ -301,11 +307,11 @@ def create_networks ():
 					"cidr_ranges": [(json_cidr_list)],
 					"span_port_enabled": true
 				}
-	
+			
 			#Convert the payload (including the cidr list) into json
 			create_network_payload=json.dumps(network_payload)
 			#Inside the scope, replace the [" "] so it's just [ ] 
-			create_network_payload=create_network_payload.replace('["','[')
+			#create_network_payload=create_network_payload.replace('["','[')
 			create_network_payload=create_network_payload.replace('"]',']')
 			#Change the objects inside the cidr list to be surrounded by double quotes instead of single
 			create_network_payload=create_network_payload.replace("'",'"')
@@ -324,6 +330,7 @@ def create_networks ():
 			global claim_key
 			network_key=create_network_info['key']
 			network_keys.append(network_key)
+			network_keys_dict[network_name] = network_key
 			claim_key=create_network_info['claim_key']
 			list_networks.append("    Network Name: " +network_name+"\t\tUnique Key: "+claim_key+"\n")
 			
@@ -381,14 +388,16 @@ def create_networks ():
 
 def set_scope_protection (): 
 	scope_list = []
+	#scope_list_two = []
 	
 	if not network_keys: 
 		print("    No networks were created. Skipping.")
 	else: 
+		#Create a list of scope of protection entries for each network
+		for network_name in networks_scope_dict:
+			networks_scope_dict[network_name].append(network_keys_dict[network_name])
+			scope_list.append("{\"key\":\""+networks_scope_dict[network_name][2]+"\",\"type\":\"vpc\",\"policy\":{\"id\":\""+networks_scope_dict[network_name][1]+"\"}}")
 
-		for key in network_keys: 
-			scope_list.append("{\"key\":\""+key+"\",\"type\":\"vpc\",\"policy\":{\"id\":\""+entitlement_id+"\"}}")
-	
 		#Convert python list to string
 		scope=str(scope_list)[1:-1]
 	
