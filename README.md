@@ -14,13 +14,13 @@ Authentication (Note, that if you enter both username/password and access keys, 
 Configuration:
 - alert_logic_cid = "" // Alert Logic Customer ID
 - alert_logic_deployment_name = "" // The name you would like the Alert Logic Deployment created with
-- entitlement = "" // Alert Logic Entitlement Level (Essentials or Professional)
 
 ### Examples for how to add Networks & External assets
 #### Inside the python list 'network = []', you will need to create a list for each of the specific Networks you would like to add to the deployment, along with the CIDR ranges of that network(s). These networks need to have a particular format: 
 - All networks need to be added as a list, inside the existing networks list
-- The first value in each list must be the name of the network
-- The CIDR ranges for that network must follow on from the network name, in a list format. 
+- The first value in each line must be the name of the network, comma delimited
+- The second value in each line must be the entitlement level (Essentials or Professional), comma delimited
+- The CIDR ranges for that network must follow on from the entitlement level, comma delimited for each CIDR range
 
 #### Example: 
 
@@ -31,9 +31,9 @@ Let's say we have 2 networks that we need to add to this deployment:
 
 The networks inside the network.csv file will look like this: 
 
-test-network,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
-test-network-2,10.10.20.0/24,10.10.21.0/24
-test-network-3,10.10.30.0/24
+test-network,professional,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
+test-network-2,essentials,10.10.20.0/24,10.10.21.0/24
+test-network-3,professional,10.10.30.0/24
 
 #### These objects are required for external assets to be scanned externally by Alert Logic's Datacentre, post deployment. 
 - external_dns_names=["www.example.com","www.google.com"]
