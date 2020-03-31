@@ -31,8 +31,8 @@ Let's say we have 2 networks that we need to add to this deployment:
 
 The networks inside the network.csv file will look like this: 
 
-test-network,professional,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
-test-network-2,essentials,10.10.20.0/24,10.10.21.0/24
+test-network,professional,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24<br />
+test-network-2,essentials,10.10.20.0/24,10.10.21.0/24<br />
 test-network-3,professional,10.10.30.0/24
 
 #### These objects are required for external assets to be scanned externally by Alert Logic's Datacentre, post deployment. 
