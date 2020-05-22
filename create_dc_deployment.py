@@ -3,6 +3,7 @@
 #Wriiten for python 3.7.3
 
 #Required Libraries
+import ipaddress
 import json
 import csv
 import os
@@ -58,7 +59,7 @@ if alert_logic_cid == '':
 if alert_logic_deployment_name == '':
         print ('\nThe name for the deployment has not been stored in the configuration file.\n')
         exit()
-
+'''
 entitlement=entitlement.capitalize()
 
 if entitlement == '':
@@ -67,7 +68,7 @@ if entitlement == '':
 elif entitlement not in ['Professional','Essentials']:
 	print('\nThe protection level has been set incorrectly in the configuration file. Please specify either "Essentials" or "Professional".\n')
 	exit()
-
+'''
 #Function to get AIMS Token once we have creds
 def get_token_userpass ():
 	url = f'{global_url}aims/v1/authenticate'
@@ -274,7 +275,7 @@ def create_networks ():
 	policies_info = json.loads(policies_info_response.text)
 
 	if not network_csv_file:
-		print("    No networks detected in a csv file. Please provide the file path to the list of networks in a .csv on the properties file.\n")
+		print("    No networks detected in a csv file. Please provide the file path to the list of networks in a .csv in the properties file.\n")
 		protected_networks.append("\t\t\t\tNo networks defined")
 	else: 
 		#Read from networks csv file
@@ -428,63 +429,120 @@ def set_scope_protection ():
 def create_external_assets ():
 	global external_assets_logging
 	external_assets_logging=[]
+	cidr_values = {
+		"24": "256",
+		"25": "128",
+		"26": "64",
+		"27": "32",
+		"28": "16",
+		"29": "8",
+		"30": "4",
+		"31": "2",
+		"32": "1"
+	}
 
-	if not external_dns_names: 
-		print('    No external DNS names to add')
+	if not external_fqdns_csv_file: 
+		print("    No FQDNs detected in a csv file. Please provide the file path to the list of FQDNs in a .csv in the properties file.\n")
 	else:
-		for dns in external_dns_names:
+		#Read from FQDNs csv file
+		with open(external_fqdns_csv_file, newline='') as fqdn_csv_file:
+			fqdns_reader = csv.reader(fqdn_csv_file)
+			fqdns = list(fqdns_reader)
+		
+		for fqdn in fqdns:
 
-			dns_payload= {
+			fqdn_payload= {
 				"operation": "declare_asset",
 				"type": "external-dns-name",
 				"scope": "config",
-				"key": "/external-dns-name/"+dns+"",
+				"key": "/external-dns-name/"+fqdn[0]+"",
 				"properties": {
-					"name": ""+dns+"",
-					"dns_name": ""+dns+"",
+					"name": ""+fqdn[0]+"",
+					"dns_name": ""+fqdn[0]+"",
 					"state": "new"
 				}
 			}
 
-			create_dns_payload=json.dumps(dns_payload)
-			create_dns_url = f'{base_url}/assets_write/v1/{alert_logic_cid}/deployments/{deployment_id}/assets'
-			create_dns_response = requests.put(create_dns_url, create_dns_payload, headers=headers)
+			create_fqdn_payload=json.dumps(fqdn_payload)
+			create_fqdn_url = f'{base_url}/assets_write/v1/{alert_logic_cid}/deployments/{deployment_id}/assets'
+			create_fqdn_response = requests.put(create_fqdn_url, create_fqdn_payload, headers=headers)
 
-			if create_dns_response.status_code != 201:
-				print('    Error: DNS with name '+dns+' was unable to be added. Got the following response: ',end='')
-				print(create_dns_response)
+			if create_fqdn_response.status_code != 201:
+				print(f'    Error: FQDN with name {fqdn} was unable to be added. Got the following response: ')
+				print(create_fqdn_response)
 			else :
-				print('    DNS with name '+dns+' added successfully.')
-				external_assets_logging.append("\t\t\t\tExternal DNS: "+dns+"\n")
+				print(f'    FQDN with name {fqdn} added successfully.')
+				external_assets_logging.append(f"\t\t\t\tExternal FQDN: {fqdn}\n")
 
-	if not external_ip_addresses:
+	if not external_ips_csv_file:
                 print('    No external IP addresses to add')
 	else:
-		for ip in external_ip_addresses:
+		#Read from IPs csv file
+		with open(external_ips_csv_file, newline='') as ips_csv_file:
+			ips_reader = csv.reader(ips_csv_file)
+			ip_entries = list(ips_reader)
+		for entry in ip_entries:
+			cidr_check = entry[0].split("/")
+			if  len(cidr_check) == 1:
+				try: 
+					ip_validation = ipaddress.ip_address(entry[0])
+					ip = entry[0]
+					
+					def ip_payload_request():
+						ip_payload= {
+							"operation": "declare_asset",
+							"type": "external-ip",
+							"scope": "config",
+							"key": "/external-ip/"+ip+"",
+							"properties": {
+								"name": ""+ip+"",
+								"ip_address": ""+ip+"",
+								"state": "new"
+							}
+						}
 
-			ip_payload= {
-                                "operation": "declare_asset",
-                                "type": "external-ip",
-                                "scope": "config",
-                                "key": "/external-ip/"+ip+"",
-                                "properties": {
-                                        "name": ""+ip+"",
-                                        "dns_name": ""+ip+"",
-                                        "state": "new"
-                                }
-                        }
+						create_ip_payload=json.dumps(ip_payload)
+						create_ip_url = f'{base_url}/assets_write/v1/{alert_logic_cid}/deployments/{deployment_id}/assets'
+						create_ip_response = requests.put(create_ip_url, create_ip_payload, headers=headers)
 
-	
-			create_ip_payload=json.dumps(ip_payload)
-			create_ip_url = f'{base_url}/assets_write/v1/{alert_logic_cid}/deployments/{deployment_id}/assets'
-			create_ip_response = requests.put(create_ip_url, create_ip_payload, headers=headers)
+						#This is kicking off when the except below fires for 304s. Need to fix that.
+						if create_ip_response.status_code != 201:
+							print(f'    Error: IP address {ip} was unable to be added. Got the following response: ')
+							print(create_ip_response)
+						else :
+							print(f'    IP address {ip} added successfully.')
+							external_assets_logging.append(f"\t\t\t\tExternal IP: {ip}\n")
+				except ValueError:
+					print(f'    Error: This is not a valid IP address or CIDR range: {entry[0]}')
+					continue
+				configure_ip_entry = ip_payload_request()
+			
+			elif len(cidr_check) == 2:
+				network_range_start = cidr_check[0]
+				network_range_list = network_range_start.split(".")
+				fourth_octet = network_range_list.pop()
 
-			if create_ip_response.status_code != 201:
-				print('    Error: IP address '+ip+' was unable to be added. Got the following response: ',end='')
-				print(create_ip_response)
-			else :
-				print('    IP address '+ip+' added successfully.')
-				external_assets_logging.append("\t\t\t\tExternal IP: "+ip+"\n")
+				cidr_range = cidr_check[1]
+				possible_cidrs = list(cidr_values.keys())
+				cidr_value = cidr_values[cidr_range]
+				if cidr_range in possible_cidrs:
+					try:
+						ip_validation = ipaddress.ip_address(cidr_check[0])
+						for i in range(int(cidr_value)):
+							increment = int(fourth_octet) + i
+							network_range_list.append(str(increment))
+							ip_address = '.'.join(network_range_list)
+							ip = ip_address	
+
+							configure_ip_entry = ip_payload_request()
+							network_range_list.pop()
+					except ValueError:
+						print(f'    Error: The IP in CIDR range: {cidr_check[0]} is not valid.')
+				else:
+					print(f'    Error: CIDR range entries support '"'/24'"' - '"'/32'"'')
+
+			else:
+				print(f'    Error: IP list {entry[0]} was in an incorrect format. Please use either 10.10.10.1 or 10.10.10.0/28 per line. CIDR range entries support '"'/24'"' - '"'/32'"'')
 		print()
 	
 	#Logging External Assets
@@ -539,5 +597,5 @@ else:
     append_write = 'w' # make a new file if not
 
 write_log = open(filename,append_write)
-write_log.write(str(date_time) + ":\tDeployment Name: " + alert_logic_deployment_name + "\n" + "\t\t\tEntitlement: " +entitlement+"\n" + "\t\t\tCreated By: " +user_name+"\n" + "\t\t\tProtected Networks: \n" +str(protected_networks)+"\n" + "\t\t\tExternal Assets: \n" + external_assets_logging+"\n")
+write_log.write(str(date_time) + ":\tDeployment Name: " + alert_logic_deployment_name + "\n" + "\t\t\tCreated By: " +user_name+"\n" + "\t\t\tProtected Networks: \n" +str(protected_networks)+"\n" + "\t\t\tExternal Assets: \n" + external_assets_logging+"\n")
 write_log.close()
