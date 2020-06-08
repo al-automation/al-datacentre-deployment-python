@@ -41,15 +41,29 @@ alert_logic_deployment_name = ""
 #     test-network,professional,10.10.10.0/24,10.10.11.0/24,10.10.12.0/24
 #     test-network-2,essentials,10.10.20.0/24,10.10.21.0/24
 #     test-network-3,professional,10.10.30.0/24
-#      <More Networks if needed> 
+#      <More Networks if needed>
+
 network_csv_file = "networks.csv"
 
 # External Assets
 # Here you can add external assets which will be scanned from Alert Logic's Datacenter. 
-# You will need to add each DNS name or IP address in the following lists, in the correct format.
-# Examples: 
-#     external_dns_names=["www.example.com","www.google.com"]
-#     external_ip_addresses=["8.8.8.8", "8.8.4.4"]
+# You will need to add each FQDN or IP address to a respective .csv file, in the correct format.
+# For External Fully Qualified Domain Names:  
+#     - Add the names to external-fqdns.csv.
+# Good Examples:
+#     "www.example.com"
+#     "www.google.com"
+#
+# For External IP Addresses:
+#     - Add the IP addresses to external-ips.csv.
+# Good Examples:
+#     "8.8.8.8"
+#     "8.8.4.4"
+# Bad Examples:
+#     "10.12.x.12\29"
+#     "10.1x.10.8/32"
+#     "8.x.1124.1"
+
 external_dns_names=[]
 external_ip_addresses=[]
 
