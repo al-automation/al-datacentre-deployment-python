@@ -4,7 +4,7 @@ This is a python script that will allow you to create a Datacenter deployment in
 ## Usage
 #### These properties are required to ensure that the script can create the deployment successfully. 
 
-Authentication (Note, that if you enter both username/password and access keys, access keys will be used by default):
+Authentication (Note, that if you enter both username/password and access keys, please note access keys will be used by default):
 - alert_logic_username = '' // Alert Logic Username
 - alert_logic_password = '' // Alert Logic Password
 
