@@ -38,14 +38,14 @@ test-network-3,professional,10.10.30.0/24
 #### External Assets
 Here you can add external assets which will be scanned from Alert Logic's Datacenter. 
 You will need to add each FQDN or IP address to a respective .csv file, in the correct format.
-For External Fully Qualified Domain Names:  
+##### For External Fully Qualified Domain Names:  
 - Add the names to external-fqdns.csv.
 
 #### Good Examples:
 - "www.example.com"
 - "www.google.com"
 
-For External IP Addresses:
+##### For External IP Addresses:
 - Add the IP addresses to external-ips.csv.
 
 #### Good Examples:
